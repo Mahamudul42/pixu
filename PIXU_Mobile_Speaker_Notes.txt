@@ -1,0 +1,207 @@
+PIXU — MOBILE SPEAKER NOTES
+Read naturally. When you see LOOK UP, lift your eyes and say that line to the audience.
+==========================================================
+
+SLIDE 1 — Opening — What is the problem? (30–35 sec)
+----------------------------------------------------------
+Good morning everyone. I’m Mahamudul Hasan from the University of Minnesota, and today I’ll talk about PIXU, our work on personalized image selection for news articles.
+
+Usually, recommender systems focus on choosing and ranking the articles. But once an article is selected, there is still another decision: which image should represent that story for this reader?
+
+PIXU looks at that second decision — the presentation layer that comes after article recommendation.
+
+LOOK UP: Which image should represent this story for this reader?
+
+>>> NEXT SLIDE
+
+SLIDE 2 — Motivation — One article, multiple images (35–40 sec)
+----------------------------------------------------------
+Here is the basic motivation. This is one real AP article about the total solar eclipse, but the same article includes several legitimate editorial images.
+
+These images emphasize different aspects of the same story. One is more aesthetic, one focuses on a person’s reaction, one directly shows the eclipse, one feels more dramatic, and one captures a human moment around the event.
+
+I’m not saying PIXU measures these five dimensions directly. I’m using them only to show the intuition: even when the article is fixed, the visual presentation can still vary.
+
+LOOK UP: The article is the same, but the visual experience can be very different.
+
+>>> NEXT SLIDE
+
+SLIDE 3 — Research gap (30–35 sec)
+----------------------------------------------------------
+This problem sits between three areas. News recommendation usually asks which articles to rank. Visual communication tells us that images affect attention and interpretation. And artwork personalization shows that the same item can sometimes be presented differently to different users.
+
+But news has an additional constraint. The image is not just decoration — it still needs to represent the story. And the editorial default is already a strong baseline.
+
+So the open question for us is: can we personalize editorial image choice for text-based news articles?
+
+LOOK UP: Can we personalize the image without losing the connection to the story?
+
+>>> NEXT SLIDE
+
+SLIDE 4 — Research questions (25–30 sec)
+----------------------------------------------------------
+I frame PIXU as a feasibility study with three questions.
+
+First, can click history carry a learnable visual signal? Second, can we deploy image selection after the article ranker in a real newsletter pipeline? And third, once we deploy it, what limits the impact in real use?
+
+Throughout the study, the article list and article order stay fixed. Only the displayed image can change.
+
+LOOK UP: The articles stay fixed. We only change the image.
+
+>>> NEXT SLIDE
+
+SLIDE 5 — System — PIXU architecture (45–50 sec)
+----------------------------------------------------------
+This is the system view. The main thing to notice is that PIXU comes after article ranking.
+
+First, POPROX selects the ten articles for the newsletter. That ranking step is the same across the experimental conditions.
+
+Then, for each selected article, PIXU looks at the available candidate images. We encode those images with CLIP. We also build a visual user profile by averaging image embeddings from the user’s recent clicked articles — up to fifty clicked images.
+
+We compare each candidate image with that visual profile and select the closest one. If there is no usable alternative, we keep the editorial default.
+
+So PIXU is not replacing the recommender. It only changes how an already selected article is visually presented.
+
+LOOK UP: Same articles, same order — only the presentation can change.
+
+>>> NEXT SLIDE
+
+SLIDE 6 — RQ1 — Offline proxy (35–40 sec)
+----------------------------------------------------------
+For the first question, we start offline with MIND. This is only a proxy task because MIND has one image per article, so it does not directly test choosing among multiple images for the same article.
+
+The task is a three-way choice: identify the image associated with the clicked article. Random gives 33.3 percent accuracy, popularity 35.7 percent, and XGBoost reaches 63.0 percent on MIND-Large.
+
+PIXU reaches 68.1 percent accuracy and an AUC of 0.783.
+
+So the offline result suggests that click history contains some learnable visual signal. I treat this as feasibility evidence, not proof of live impact.
+
+LOOK UP: Learnable offline — but this does not yet prove live image preference.
+
+>>> NEXT SLIDE
+
+SLIDE 7 — RQ2 — Live deployment (35–40 sec)
+----------------------------------------------------------
+Then we moved to the live POPROX newsletter pipeline. We randomly assigned 163 users to three conditions and ran the study for five weeks.
+
+Across the study, POPROX delivered 5,567 newsletters, or 55,670 article impressions.
+
+Baseline used the editorial default images. Half-personalized used PIXU for five positions and the default for five. Full-personalized used PIXU wherever candidate images allowed it.
+
+The engineering result is that PIXU ran as a post-ranking module while keeping the article ranking unchanged.
+
+LOOK UP: We changed presentation, not recommendation.
+
+>>> NEXT SLIDE
+
+SLIDE 8 — Behavioral results — Clicks (35–40 sec)
+----------------------------------------------------------
+Now the click results. The short version is that we did not observe a reliable click benefit.
+
+In the half-personalized condition, 47.6 percent of clicks fell on personalized positions — very close to the 50 percent expectation under no effect. The result was not statistically significant.
+
+Between groups, active users in baseline had a 2.66 percent CTR, compared with 2.39 percent for full PIXU. That difference was also not significant.
+
+So I do not claim that PIXU improved clicking. The important result is that the offline signal did not translate into a reliable click lift in the live newsletter.
+
+LOOK UP: Offline learnability did not become a reliable click lift.
+
+>>> NEXT SLIDE
+
+SLIDE 9 — User experience — Survey (35–40 sec)
+----------------------------------------------------------
+I also want to show the survey results, because they give a different view of the deployment.
+
+The sample is small, so these are exploratory trends, not confirmed effects. Satisfaction was higher in the full PIXU group than in baseline. Perceived relevance was also higher. Trust changed only slightly.
+
+None of these differences were statistically significant.
+
+So the careful interpretation is: clicks did not move, but the survey gives a hint that presentation personalization may still affect how users perceive the newsletter. This needs a larger study to confirm.
+
+LOOK UP: Positive survey trends, but not statistically significant.
+
+>>> NEXT SLIDE
+
+SLIDE 10 — RQ3 — Why did clicks not move? (40–45 sec)
+----------------------------------------------------------
+This is how I interpret the mixed result.
+
+PIXU learns user affinity from click history. A reader may repeatedly respond to certain visual styles, emotional reactions, people, or compositions.
+
+But in news, affinity is only one part of the problem. The image also has to represent the article faithfully. The image a reader may find most appealing is not always the clearest or most appropriate image for the story.
+
+There were practical limits as well. Fifty-four percent of articles had fewer than four image candidates, and around sixty percent of full-personalized impressions still kept the editorial default.
+
+So the room for personalization was often limited. This points to the next step: balance reader affinity with image–article grounding.
+
+LOOK UP: User affinity alone is not enough for news.
+
+>>> NEXT SLIDE
+
+SLIDE 11 — Next model (20–25 sec)
+----------------------------------------------------------
+So the next model should balance two objectives.
+
+One is reader affinity: which image matches what this reader tends to respond to? The other is faithful article representation: which image best fits the article and its central story?
+
+That changes the question from ‘which image does the reader like?’ to ‘which image is both appealing and appropriate for this story?’
+
+LOOK UP: Appealing to the reader AND appropriate for the story.
+
+>>> NEXT SLIDE
+
+SLIDE 12 — BEYOND angle (30–35 sec)
+----------------------------------------------------------
+For the BEYOND workshop, I think the broader point is that personalization is not only ranking.
+
+Many systems first choose an item and then make another decision about how to present it — a product photo, a poster, album art, a thumbnail, or in our case a news image.
+
+PIXU shows why that presentation layer deserves attention. But when the default is professionally curated, personalization has to compete with a strong baseline.
+
+And clicks may not capture everything. Perceived relevance, trust, representation, and the overall experience may also matter.
+
+LOOK UP: Personalization can happen after ranking, at the presentation layer.
+
+>>> NEXT SLIDE
+
+SLIDE 13 — Conclusion (25–30 sec)
+----------------------------------------------------------
+To conclude, I would summarize PIXU in three points.
+
+First, the offline proxy suggests a learnable visual signal: PIXU reached 68.1 percent accuracy on MIND-Large.
+
+Second, the approach was deployable: it ran for five weeks in POPROX while keeping article ranking unchanged.
+
+Third, the live impact is still open. We did not find a reliable click benefit, and the survey trends need a larger sample to confirm.
+
+The main direction from this work is to combine reader affinity with image–article grounding.
+
+Thank you. I’m happy to take questions.
+
+LOOK UP: Feasible and deployable — but the next step is affinity plus grounding.
+
+>>> NEXT SLIDE
+
+SLIDE 14 — BACKUP — Offline baselines (Only if asked)
+----------------------------------------------------------
+If someone asks about the offline baselines: PIXU is strongest in the table on both MIND-Small and MIND-Large.
+
+On MIND-Large, PIXU reaches 68.1 percent accuracy and 0.783 AUC. XGBoost is the strongest baseline shown here, with 63.0 percent accuracy and 0.750 AUC.
+
+I would still emphasize that this is a proxy task. It shows learnable visual signal, but it does not fully isolate within-article image preference.
+
+LOOK UP: Proxy evidence, not a direct within-article preference test.
+
+>>> NEXT SLIDE
+
+SLIDE 15 — BACKUP — Deployment challenges (Only if asked)
+----------------------------------------------------------
+The main deployment challenge is image–article grounding: PIXU optimizes similarity to a user profile, but it does not directly score whether an image is the best representation of the article.
+
+Other limitations include shallow candidate pools, click attribution, profile contamination, cold start, and the strength of the editorial baseline.
+
+The useful way I frame this is that the deployment did not only test performance — it also revealed which assumptions need to be improved for editorial news.
+
+LOOK UP: The most important limitation is image–article grounding.
+
+>>> NEXT SLIDE
